@@ -1,0 +1,80 @@
+// Cargar géneros
+                        const genDiv = document.getElementById('det-generos');
+                        genDiv.innerHTML = '';
+                        currentMovie.genero.forEach(g => {
+                            genDiv.innerHTML += `<span class="genre-tag">${g}</span>`;
+                        });
+            
+                        // Cargar sinopsis
+                        document.getElementById('det-sinopsis').innerText = currentMovie.sinopsis;
+                        document.getElementById('det-sinopsis').classList.remove('expanded');
+                        document.getElementById('btn-more').innerText = 'Mostrar más';
+            
+                        // Guardar servidores
+                        currentServers = currentMovie.servidores;
+                    }
+            
+                    // ========== REPRODUCTOR ==========
+                    function startPlayback() {
+                        openServersPanel();
+                    }
+            
+                    function renderServersList(servers) {
+                        const container = document.getElementById('servers-list');
+                        container.innerHTML = '';
+                        
+                        servers.forEach(server => {
+                            const serverDiv = document.createElement('div');
+                            serverDiv.className = 'server-item';
+                            serverDiv.innerHTML = `
+                                <span>${server.titulo}</span>
+                                <i class="fa-solid fa-chevron-right"></i>
+                            `;
+                            serverDiv.onclick = () => playOnServer(server);
+                            container.appendChild(serverDiv);
+                        });
+                    }
+            
+                    function playOnServer(server) {
+                        // Cerrar panel de servidores
+                        closeServersPanel();
+                        
+                        // Mostrar loading
+                        const loadingDiv = document.getElementById('player-loading');
+                        const loadingText = document.getElementById('loading-text');
+                        loadingText.innerText = `Cargando desde ${server.titulo}...`;
+                        loadingDiv.classList.add('active');
+                        
+                        // Ocultar elementos del fake player
+                        const backdropImg = document.getElementById('det-backdrop');
+                        backdropImg.style.display = 'none';
+                        
+                        const overlay = document.querySelector('.backdrop-overlay');
+                        overlay.style.display = 'none';
+                        
+                        const playCenter = document.querySelector('.play-center');
+                        playCenter.style.display = 'none';
+                        
+                        // Mostrar y cargar iframe
+                        const iframe = document.getElementById('player-iframe');
+                        iframe.style.display = 'block';
+                        
+                        // Evento cuando el iframe carga
+                        iframe.onload = () => {
+                            loadingDiv.classList.remove('active');
+                        };
+                        
+                        iframe.src = server.url;
+                        
+                        // Timeout por si el iframe nunca dispara onload
+                        setTimeout(() => {
+                            loadingDiv.classList.remove('active');
+                        }, 4000);
+                        
+                        // Mostrar botón de cambiar servidor
+                        const changeBtn = document.getElementById('change-server-btn');
+                        changeBtn.style.display = 'flex';
+                        
+                        isPlaying = true;
+                        showToast(`${server.titulo} seleccionado`, 2000);
+                    }
