@@ -1,80 +1,67 @@
-// Cargar géneros
-                        const genDiv = document.getElementById('det-generos');
-                        genDiv.innerHTML = '';
-                        currentMovie.genero.forEach(g => {
-                            genDiv.innerHTML += `<span class="genre-tag">${g}</span>`;
-                        });
+ function showToastMessage(msg, icon = "fa-regular fa-circle-check") {
+                    toast.innerHTML = `<i class="${icon}"></i> <span>${msg}</span>`;
+                    toast.classList.add('active');
+                    setTimeout(() => toast.classList.remove('active'), 2000);
+                }
             
-                        // Cargar sinopsis
-                        document.getElementById('det-sinopsis').innerText = currentMovie.sinopsis;
-                        document.getElementById('det-sinopsis').classList.remove('expanded');
-                        document.getElementById('btn-more').innerText = 'Mostrar más';
+                function loadMovieUI() {
+                    backdropImg.src = movieData.backdrop;
+                    posterImg.src = movieData.poster;
+                    movieTitleSpan.innerText = movieData.title;
+                    metaDetails.innerHTML = `<span><i class="fa-regular fa-calendar"></i> ${movieData.year}</span> <span><i class="fa-regular fa-star"></i> 8.7</span> <span><i class="fa-regular fa-clock"></i> 2h 46min</span>`;
+                    genresContainer.innerHTML = movieData.genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
+                    sinopsisTextEl.innerText = movieData.sinopsis;
+                    sinopsisTextEl.style.webkitLineClamp = '3';
+                    sinopsisTextEl.style.display = '-webkit-box';
+                    
+                    expandBtn.onclick = () => {
+                        if (sinopsisTextEl.style.webkitLineClamp === '3') {
+                            sinopsisTextEl.style.webkitLineClamp = 'unset';
+                            sinopsisTextEl.style.display = 'block';
+                            expandBtn.innerHTML = 'Mostrar menos <i class="fa-solid fa-chevron-up"></i>';
+                        } else {
+                            sinopsisTextEl.style.webkitLineClamp = '3';
+                            sinopsisTextEl.style.display = '-webkit-box';
+                            expandBtn.innerHTML = 'Mostrar más <i class="fa-solid fa-chevron-down"></i>';
+                        }
+                    };
+                }
             
-                        // Guardar servidores
-                        currentServers = currentMovie.servidores;
-                    }
+                function openServersModal() {
+                    renderServersList();
+                    serversModal.classList.add('active');
+                    modalBackdrop.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
             
-                    // ========== REPRODUCTOR ==========
-                    function startPlayback() {
-                        openServersPanel();
-                    }
+                function closeServersModal() {
+                    serversModal.classList.remove('active');
+                    modalBackdrop.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
             
-                    function renderServersList(servers) {
-                        const container = document.getElementById('servers-list');
-                        container.innerHTML = '';
-                        
-                        servers.forEach(server => {
-                            const serverDiv = document.createElement('div');
-                            serverDiv.className = 'server-item';
-                            serverDiv.innerHTML = `
-                                <span>${server.titulo}</span>
-                                <i class="fa-solid fa-chevron-right"></i>
-                            `;
-                            serverDiv.onclick = () => playOnServer(server);
-                            container.appendChild(serverDiv);
-                        });
-                    }
-            
-                    function playOnServer(server) {
-                        // Cerrar panel de servidores
-                        closeServersPanel();
-                        
-                        // Mostrar loading
-                        const loadingDiv = document.getElementById('player-loading');
-                        const loadingText = document.getElementById('loading-text');
-                        loadingText.innerText = `Cargando desde ${server.titulo}...`;
-                        loadingDiv.classList.add('active');
-                        
-                        // Ocultar elementos del fake player
-                        const backdropImg = document.getElementById('det-backdrop');
-                        backdropImg.style.display = 'none';
-                        
-                        const overlay = document.querySelector('.backdrop-overlay');
-                        overlay.style.display = 'none';
-                        
-                        const playCenter = document.querySelector('.play-center');
-                        playCenter.style.display = 'none';
-                        
-                        // Mostrar y cargar iframe
-                        const iframe = document.getElementById('player-iframe');
-                        iframe.style.display = 'block';
-                        
-                        // Evento cuando el iframe carga
-                        iframe.onload = () => {
-                            loadingDiv.classList.remove('active');
+                function renderServersList() {
+                    serversListContainer.innerHTML = '';
+                    currentServers.forEach(server => {
+                        const btn = document.createElement('div');
+                        btn.className = 'server-option';
+                        btn.innerHTML = `<i class="fa-solid fa-server"></i> ${server.title}`;
+                        btn.onclick = () => {
+                            closeServersModal();
+                            launchFullscreenPlayer(server);
                         };
-                        
-                        iframe.src = server.url;
-                        
-                        // Timeout por si el iframe nunca dispara onload
-                        setTimeout(() => {
-                            loadingDiv.classList.remove('active');
-                        }, 4000);
-                        
-                        // Mostrar botón de cambiar servidor
-                        const changeBtn = document.getElementById('change-server-btn');
-                        changeBtn.style.display = 'flex';
-                        
-                        isPlaying = true;
-                        showToast(`${server.titulo} seleccionado`, 2000);
-                    }
+                        serversListContainer.appendChild(btn);
+                    });
+                }
+            
+                function launchFullscreenPlayer(server) {
+                    currentSelectedServer = server;
+                    playerStatus.innerText = `${server.title}`;
+                    videoFrame.src = server.url;
+                    fullscreenPlayer.classList.add('active');
+                    playerLoader.style.display = 'flex';
+                    
+                    videoFrame.onload = () => {
+                        playerLoader.style.display = 'none';
+                        showToastMessage(`Reproduciendo: ${server.title}`, "fa-solid fa-play");
+                    };
